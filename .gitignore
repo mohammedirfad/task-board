@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.angular/
+.env
+coverage/
+*.log
+Thumbs.db
+
+# Generated output, documentation, and temporary working files
+/output/
+/docs/
+/.tmp/
+*.pdf
+*.docx

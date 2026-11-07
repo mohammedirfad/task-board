@@ -1,0 +1,21 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: local-root-password
+      MYSQL_DATABASE: taskboard
+      MYSQL_USER: taskboard_app
+      MYSQL_PASSWORD: local-taskboard-pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - taskboard_mysql:/var/lib/mysql
+      - ./database/taskboard.sql:/docker-entrypoint-initdb.d/001-taskboard.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-plocal-root-password"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  taskboard_mysql:

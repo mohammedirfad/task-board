@@ -1,0 +1,52 @@
+{
+  "info": {
+    "_postman_id": "d683bb33-9934-43ec-a513-a9ce80a7d764",
+    "name": "Task Board API",
+    "description": "Local Task Board API. Start the API at localhost:3000. Run Login first; its test script saves the JWT to the collection token variable. Protected requests inherit Bearer auth.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "taskId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [{ "name": "API health", "request": { "method": "GET", "url": "{{baseUrl}}/health", "description": "Confirm the API process is responding." } }]
+    },
+    {
+      "name": "Authentication",
+      "item": [{
+        "name": "Login (stores JWT)",
+        "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Login succeeded', function () { pm.response.to.have.status(200); });", "const body = pm.response.json();", "pm.collectionVariables.set('token', body.token);"] } }],
+        "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"Admin@123\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/login", "description": "Returns a short-lived JWT and user profile. The test script saves the JWT for protected calls." }
+      }, {
+        "name": "Logout (revokes JWT)",
+        "request": { "method": "POST", "url": "{{baseUrl}}/logout", "description": "Revoke the current JWT. Reuse of this token will return 401; run Login again to obtain another token." }
+      }]
+    },
+    {
+      "name": "Dashboard",
+      "item": [{ "name": "Summary", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard", "description": "Counts tasks by status and returns total story points." } }]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        { "name": "List / search / filter / page", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/tasks?search=&priority=&status=&sortBy=plannedDate&order=asc&page=1&limit=10", "host": ["{{baseUrl}}"], "path": ["tasks"], "query": [{ "key": "search", "value": "" }, { "key": "priority", "value": "", "disabled": true }, { "key": "status", "value": "", "disabled": true }, { "key": "sortBy", "value": "plannedDate" }, { "key": "order", "value": "asc" }, { "key": "page", "value": "1" }, { "key": "limit", "value": "10" }] }, "description": "Search by title or description; optional priority/status filtering, safe sorting, pagination (limit max 100)." } },
+        { "name": "Get one", "request": { "method": "GET", "url": "{{baseUrl}}/tasks/{{taskId}}", "description": "Get task details by ID." } },
+        { "name": "Create backlog task", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Review onboarding flow\",\n  \"description\": \"Walk through the first-run experience\",\n  \"storyPoints\": 3,\n  \"priority\": \"Medium\",\n  \"status\": \"Backlog\",\n  \"plannedDate\": \"2026-11-09\",\n  \"dueDate\": \"2026-11-13\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/tasks", "description": "Creates a backlog task. Set status to Planned to enforce daily and weekly capacity." } },
+        { "name": "Update task / move board card", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Review onboarding flow\",\n  \"description\": \"Walk through the first-run experience\",\n  \"storyPoints\": 3,\n  \"priority\": \"High\",\n  \"status\": \"Planned\",\n  \"plannedDate\": \"2026-11-09\",\n  \"dueDate\": \"2026-11-13\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/tasks/{{taskId}}", "description": "Replace task fields or update status. Moving into Planned checks both capacity limits; completed tasks cannot return to Backlog." } },
+        { "name": "Delete task", "request": { "method": "DELETE", "url": "{{baseUrl}}/tasks/{{taskId}}", "description": "Permanently deletes this task (the application asks for confirmation first)." } }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        { "name": "Get capacity limits", "request": { "method": "GET", "url": "{{baseUrl}}/settings", "description": "Read the workspace daily and weekly story point limits." } },
+        { "name": "Update capacity limits", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"dailyStoryPointLimit\": 8,\n  \"weeklyStoryPointLimit\": 40\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/settings", "description": "Save positive daily and weekly capacity. Daily must not exceed weekly." } }
+      ]
+    }
+  ]
+}
